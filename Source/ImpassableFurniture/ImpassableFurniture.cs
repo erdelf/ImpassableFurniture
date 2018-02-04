@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -50,8 +51,8 @@ namespace ImpassableFurniture
             #region leftSide
             Rect leftRect = bottomRect.LeftHalf().RightPart(0.9f).LeftPart(0.9f);
             GUI.BeginGroup(leftRect, new GUIStyle(GUI.skin.box));
-            List<ThingDef> found = DefDatabase<ThingDef>.AllDefs.Where(td =>
-                td.designationCategory == ImpassableFurniture.furnitureCategory && td.passability != Traversability.Impassable && (td.defName.Contains(this.searchTerm) || td.label.Contains(this.searchTerm)) && !this.Settings.enabledDefList.Contains(td)).OrderBy(td => td.LabelCap ?? td.defName).ToList();
+            List<ThingDef> found = DefDatabase<ThingDef>.AllDefs.Where(td => td.building != null && !td.label.Contains("(building)") &&
+                td.passability != Traversability.Impassable && (td.defName.Contains(this.searchTerm) || td.label.Contains(this.searchTerm)) && !this.Settings.enabledDefList.Contains(td)).OrderBy(td => td.LabelCap ?? td.defName).ToList();
             float num = 3f;
             Widgets.BeginScrollView(leftRect.AtZero(), ref this.leftScrollPosition, new Rect(0f, 0f, leftRect.width / 10 * 9, found.Count() * 32f));
             if (!found.NullOrEmpty())
@@ -128,15 +129,12 @@ namespace ImpassableFurniture
     [StaticConstructorOnStartup]
     static class ImpassableFurniture
     {
-        public static DesignationCategoryDef furnitureCategory;
-
         static ImpassableFurniture()
         {
-            furnitureCategory = DefDatabase<DesignationCategoryDef>.GetNamed("Furniture");
 
             DefDatabase<ThingDef>.AllDefsListForReading.ForEach(td =>
             {
-                if (td.designationCategory == furnitureCategory && td.passability == Traversability.Impassable)
+                if (td.building != null && td.passability == Traversability.Impassable)
                     RemovePassability(td);
             });
             ImpassableFurnitureMod.instance.Settings.enabledDefList.ForEach(td => AddPassability(td));
