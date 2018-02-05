@@ -10,6 +10,7 @@ namespace ImpassableFurniture
     class ImpassableSettings : ModSettings
     {
         public List<ThingDef> enabledDefList = new List<ThingDef>();
+        public List<ThingDef> disabledDefList = new List<ThingDef>();
 
         public override void ExposeData()
         {
@@ -17,6 +18,10 @@ namespace ImpassableFurniture
             List<string> list = this.enabledDefList?.Select(td => td.defName).ToList() ?? new List<string>();
             Scribe_Collections.Look(ref list, "enabledDefList");
             this.enabledDefList = list.Select(s => DefDatabase<ThingDef>.GetNamedSilentFail(s)).OfType<ThingDef>().ToList();
+
+            list = this.disabledDefList?.Select(td => td.defName).ToList() ?? new List<string>();
+            Scribe_Collections.Look(ref list, "disabledDefList");
+            this.disabledDefList = list.Select(s => DefDatabase<ThingDef>.GetNamedSilentFail(s)).OfType<ThingDef>().ToList();
         }
     }
 
@@ -105,18 +110,20 @@ namespace ImpassableFurniture
             #region buttons
             if (Widgets.ButtonImage(bottomRect.BottomPart(0.6f).TopPart(0.1f).RightPart(0.525f).LeftPart(0.1f), TexUI.ArrowTexRight) && this.leftSelectedDef != null)
             {
-                this.Settings.enabledDefList.Add(this.leftSelectedDef);
                 this.Settings.enabledDefList = this.Settings.enabledDefList.OrderBy(td => td.LabelCap ?? td.defName).ToList();
                 this.rightSelectedDef = this.leftSelectedDef;
                 this.leftSelectedDef = null;
-                ImpassableFurniture.AddPassability(this.rightSelectedDef);
+                ImpassableFurniture.AddPassability(this.leftSelectedDef);
+                ImpassableFurnitureMod.instance.Settings.enabledDefList.Add(this.leftSelectedDef);
+                ImpassableFurnitureMod.instance.Settings.disabledDefList.Remove(this.leftSelectedDef);
             }
             if (Widgets.ButtonImage(bottomRect.BottomPart(0.4f).TopPart(0.15f).RightPart(0.525f).LeftPart(0.1f), TexUI.ArrowTexLeft) && this.rightSelectedDef != null)
             {
-                this.Settings.enabledDefList.Remove(this.rightSelectedDef);
                 this.leftSelectedDef = this.rightSelectedDef;
                 this.rightSelectedDef = null;
-                ImpassableFurniture.RemovePassability(this.leftSelectedDef);
+                ImpassableFurniture.RemovePassability(this.rightSelectedDef);
+                ImpassableFurnitureMod.instance.Settings.disabledDefList.Add(this.rightSelectedDef);
+                ImpassableFurnitureMod.instance.Settings.enabledDefList.Remove(this.rightSelectedDef);
             }
             #endregion
 
@@ -131,18 +138,22 @@ namespace ImpassableFurniture
     {
         static ImpassableFurniture()
         {
-
-            DefDatabase<ThingDef>.AllDefsListForReading.ForEach(td =>
+            DefDatabase<ThingDef>.AllDefs.ToList().ForEach(td =>
             {
-                if (td.building != null && td.passability == Traversability.Impassable)
-                    RemovePassability(td);
+                if (td.building != null && !td.label.Contains("(building)") && !ImpassableFurnitureMod.instance.Settings.enabledDefList.Contains(td) && !ImpassableFurnitureMod.instance.Settings.disabledDefList.Contains(td))
+                    if (td.passability == Traversability.Impassable)
+                        ImpassableFurnitureMod.instance.Settings.enabledDefList.Add(td);
+                    else
+                        ImpassableFurnitureMod.instance.Settings.disabledDefList.Add(td);
             });
             ImpassableFurnitureMod.instance.Settings.enabledDefList.ForEach(td => AddPassability(td));
+            ImpassableFurnitureMod.instance.Settings.disabledDefList.ForEach(td => RemovePassability(td));
         }
 
         public static void AddPassability(ThingDef def)
         {
             def.passability = Traversability.Impassable;
+
             Regenerate();
         }
 
