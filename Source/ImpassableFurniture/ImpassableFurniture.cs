@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -113,17 +111,17 @@ namespace ImpassableFurniture
                 this.Settings.enabledDefList = this.Settings.enabledDefList.OrderBy(td => td.LabelCap ?? td.defName).ToList();
                 this.rightSelectedDef = this.leftSelectedDef;
                 this.leftSelectedDef = null;
-                ImpassableFurniture.AddPassability(this.leftSelectedDef);
-                ImpassableFurnitureMod.instance.Settings.enabledDefList.Add(this.leftSelectedDef);
-                ImpassableFurnitureMod.instance.Settings.disabledDefList.Remove(this.leftSelectedDef);
+                ImpassableFurniture.AddPassability(this.rightSelectedDef);
+                ImpassableFurnitureMod.instance.Settings.enabledDefList.Add(this.rightSelectedDef);
+                ImpassableFurnitureMod.instance.Settings.disabledDefList.Remove(this.rightSelectedDef);
             }
             if (Widgets.ButtonImage(bottomRect.BottomPart(0.4f).TopPart(0.15f).RightPart(0.525f).LeftPart(0.1f), TexUI.ArrowTexLeft) && this.rightSelectedDef != null)
             {
                 this.leftSelectedDef = this.rightSelectedDef;
                 this.rightSelectedDef = null;
-                ImpassableFurniture.RemovePassability(this.rightSelectedDef);
-                ImpassableFurnitureMod.instance.Settings.disabledDefList.Add(this.rightSelectedDef);
-                ImpassableFurnitureMod.instance.Settings.enabledDefList.Remove(this.rightSelectedDef);
+                ImpassableFurniture.RemovePassability(this.leftSelectedDef);
+                ImpassableFurnitureMod.instance.Settings.disabledDefList.Add(this.leftSelectedDef);
+                ImpassableFurnitureMod.instance.Settings.enabledDefList.Remove(this.leftSelectedDef);
             }
             #endregion
 
@@ -153,7 +151,6 @@ namespace ImpassableFurniture
         public static void AddPassability(ThingDef def)
         {
             def.passability = Traversability.Impassable;
-
             Regenerate();
         }
 
