@@ -1,0 +1,4 @@
+C:\Games\Steam\steamapps\common\RimWorld\Mods\ImpassableFurniture\Assemblies\ImpassableFurniture.dll
+C:\Games\Steam\steamapps\common\RimWorld\Mods\ImpassableFurniture\Source\ImpassableFurniture\obj\Release\ImpassableFurniture.csproj.CoreCompileInputs.cache
+C:\Games\Steam\steamapps\common\RimWorld\Mods\ImpassableFurniture\Source\ImpassableFurniture\obj\Release\ImpassableFurniture.dll
+C:\Games\Steam\steamapps\common\RimWorld\Mods\ImpassableFurniture\Source\ImpassableFurniture\obj\Release\ImpassableFurniture.csprojAssemblyReference.cache

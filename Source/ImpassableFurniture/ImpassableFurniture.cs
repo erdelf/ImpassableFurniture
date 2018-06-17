@@ -5,64 +5,64 @@ using Verse;
 
 namespace ImpassableFurniture
 {
-    class ImpassableSettings : ModSettings
+    internal class ImpassableSettings : ModSettings
     {
         public List<ThingDef> enabledDefList = new List<ThingDef>();
 
         public override void ExposeData()
         {
             base.ExposeData();
-            List<string> list = this.enabledDefList?.Select(td => td.defName).ToList() ?? new List<string>();
-            Scribe_Collections.Look(ref list, "enabledDefList");
-            this.enabledDefList = list.Select(s => DefDatabase<ThingDef>.GetNamedSilentFail(s)).OfType<ThingDef>().ToList();
+            List<string> list = this.enabledDefList?.Select(selector: td => td.defName).ToList() ?? new List<string>();
+            Scribe_Collections.Look(list: ref list, label: "enabledDefList");
+            this.enabledDefList = list.Select(selector: DefDatabase<ThingDef>.GetNamedSilentFail).Where(predicate: td => td != null).ToList();
         }
     }
 
     [StaticConstructorOnStartup]
-    class ImpassableFurnitureMod : Mod
+    internal class ImpassableFurnitureMod : Mod
     {
         public static ImpassableFurnitureMod instance;
-        ImpassableSettings settings;
-        Vector2 leftScrollPosition;
-        Vector2 rightScrollPosition;
-        string searchTerm = "";
-        ThingDef leftSelectedDef;
-        ThingDef rightSelectedDef;
+        private ImpassableSettings settings;
+        private Vector2 leftScrollPosition;
+        private Vector2 rightScrollPosition;
+        private string searchTerm = "";
+        private ThingDef leftSelectedDef;
+        private ThingDef rightSelectedDef;
 
-        public ImpassableFurnitureMod(ModContentPack content) : base(content) => instance = this;
+        public ImpassableFurnitureMod(ModContentPack content) : base(content: content) => instance = this;
 
         internal ImpassableSettings Settings
         {
-            get => this.settings ?? (this.settings = GetSettings<ImpassableSettings>());
+            get => this.settings ?? (this.settings = this.GetSettings<ImpassableSettings>());
             set => this.settings = value;
         }
 
         public override void DoSettingsWindowContents(Rect inRect)
         {
-            base.DoSettingsWindowContents(inRect);
+            base.DoSettingsWindowContents(inRect: inRect);
             Text.Font = GameFont.Medium;
-            Rect topRect = inRect.TopPart(0.05f);
-            this.searchTerm = Widgets.TextField(topRect.RightPart(0.95f).LeftPart(0.95f), this.searchTerm);
-            Rect labelRect = inRect.TopPart(0.1f).BottomHalf();
-            Rect bottomRect = inRect.BottomPart(0.9f);
+            Rect topRect = inRect.TopPart(pct: 0.05f);
+            this.searchTerm = Widgets.TextField(rect: topRect.RightPart(pct: 0.95f).LeftPart(pct: 0.95f), text: this.searchTerm);
+            Rect labelRect = inRect.TopPart(pct: 0.1f).BottomHalf();
+            Rect bottomRect = inRect.BottomPart(pct: 0.9f);
 
             #region leftSide
-            Rect leftRect = bottomRect.LeftHalf().RightPart(0.9f).LeftPart(0.9f);
-            GUI.BeginGroup(leftRect, new GUIStyle(GUI.skin.box));
-            List<ThingDef> found = DefDatabase<ThingDef>.AllDefs.Where(td => td.building != null && !td.label.Contains("(building)") &&
-                td.passability != Traversability.Impassable && (td.defName.Contains(this.searchTerm) || td.label.Contains(this.searchTerm)) && !this.Settings.enabledDefList.Contains(td)).OrderBy(td => td.LabelCap ?? td.defName).ToList();
+            Rect leftRect = bottomRect.LeftHalf().RightPart(pct: 0.9f).LeftPart(pct: 0.9f);
+            GUI.BeginGroup(position: leftRect, style: new GUIStyle(other: GUI.skin.box));
+            List<ThingDef> found = DefDatabase<ThingDef>.AllDefs.Where(predicate: td => td.building != null && !td.label.Contains(value: "(building)") &&
+                td.passability != Traversability.Impassable && (td.defName.Contains(value: this.searchTerm) || td.label.Contains(value: this.searchTerm)) && !this.Settings.enabledDefList.Contains(item: td)).OrderBy(keySelector: td => td.LabelCap ?? td.defName).ToList();
             float num = 3f;
-            Widgets.BeginScrollView(leftRect.AtZero(), ref this.leftScrollPosition, new Rect(0f, 0f, leftRect.width / 10 * 9, found.Count() * 32f));
+            Widgets.BeginScrollView(outRect: leftRect.AtZero(), scrollPosition: ref this.leftScrollPosition, viewRect: new Rect(x: 0f, y: 0f, width: leftRect.width / 10 * 9, height: found.Count * 32f));
             if (!found.NullOrEmpty())
             {
                 foreach (ThingDef def in found)
                 {
-                    Rect rowRect = new Rect(5, num, leftRect.width - 6, 30);
-                    Widgets.DrawHighlightIfMouseover(rowRect);
+                    Rect rowRect = new Rect(x: 5, y: num, width: leftRect.width - 6, height: 30);
+                    Widgets.DrawHighlightIfMouseover(rect: rowRect);
                     if (def == this.leftSelectedDef)
-                        Widgets.DrawHighlightSelected(rowRect);
-                    Widgets.Label(rowRect, def.LabelCap ?? def.defName);
-                    if (Widgets.ButtonInvisible(rowRect))
+                        Widgets.DrawHighlightSelected(rect: rowRect);
+                    Widgets.Label(rect: rowRect, label: def.LabelCap ?? def.defName);
+                    if (Widgets.ButtonInvisible(butRect: rowRect))
                         this.leftSelectedDef = def;
 
                     num += 32f;
@@ -75,21 +75,21 @@ namespace ImpassableFurniture
 
             #region rightSide
 
-            Widgets.Label(labelRect.RightHalf().RightPart(0.9f), "Enable Impassability for:");
-            Rect rightRect = bottomRect.RightHalf().RightPart(0.9f).LeftPart(0.9f);
-            GUI.BeginGroup(rightRect, GUI.skin.box);
+            Widgets.Label(rect: labelRect.RightHalf().RightPart(pct: 0.9f), label: "Enable Impassability for:");
+            Rect rightRect = bottomRect.RightHalf().RightPart(pct: 0.9f).LeftPart(pct: 0.9f);
+            GUI.BeginGroup(position: rightRect, style: GUI.skin.box);
             num = 6f;
-            Widgets.BeginScrollView(rightRect.AtZero(), ref this.rightScrollPosition, new Rect(0f, 0f, rightRect.width / 5 * 4, this.Settings.enabledDefList.Count * 32f));
+            Widgets.BeginScrollView(outRect: rightRect.AtZero(), scrollPosition: ref this.rightScrollPosition, viewRect: new Rect(x: 0f, y: 0f, width: rightRect.width / 5 * 4, height: this.Settings.enabledDefList.Count * 32f));
             if (!this.Settings.enabledDefList.NullOrEmpty())
             {
-                foreach (ThingDef def in this.Settings.enabledDefList.Where(def => (def.defName.Contains(this.searchTerm) || def.label.Contains(this.searchTerm))))
+                foreach (ThingDef def in this.Settings.enabledDefList.Where(predicate: def => (def.defName.Contains(value: this.searchTerm) || def.label.Contains(value: this.searchTerm))))
                 {
-                    Rect rowRect = new Rect(5, num, leftRect.width - 6, 30);
-                    Widgets.DrawHighlightIfMouseover(rowRect);
+                    Rect rowRect = new Rect(x: 5, y: num, width: leftRect.width - 6, height: 30);
+                    Widgets.DrawHighlightIfMouseover(rect: rowRect);
                     if (def == this.rightSelectedDef)
-                        Widgets.DrawHighlightSelected(rowRect);
-                    Widgets.Label(rowRect, def.LabelCap ?? def.defName);
-                    if (Widgets.ButtonInvisible(rowRect))
+                        Widgets.DrawHighlightSelected(rect: rowRect);
+                    Widgets.Label(rect: rowRect, label: def.LabelCap ?? def.defName);
+                    if (Widgets.ButtonInvisible(butRect: rowRect))
                         this.rightSelectedDef = def;
 
                     num += 32f;
@@ -101,20 +101,20 @@ namespace ImpassableFurniture
 
 
             #region buttons
-            if (Widgets.ButtonImage(bottomRect.BottomPart(0.6f).TopPart(0.1f).RightPart(0.525f).LeftPart(0.1f), TexUI.ArrowTexRight) && this.leftSelectedDef != null)
+            if (Widgets.ButtonImage(butRect: bottomRect.BottomPart(pct: 0.6f).TopPart(pct: 0.1f).RightPart(pct: 0.525f).LeftPart(pct: 0.1f), tex: TexUI.ArrowTexRight) && this.leftSelectedDef != null)
             {
-                this.Settings.enabledDefList.Add(this.leftSelectedDef);
-                this.Settings.enabledDefList = this.Settings.enabledDefList.OrderBy(td => td.LabelCap ?? td.defName).ToList();
+                this.Settings.enabledDefList.Add(item: this.leftSelectedDef);
+                this.Settings.enabledDefList = this.Settings.enabledDefList.OrderBy(keySelector: td => td.LabelCap ?? td.defName).ToList();
                 this.rightSelectedDef = this.leftSelectedDef;
                 this.leftSelectedDef = null;
-                ImpassableFurniture.AddPassability(this.rightSelectedDef);
+                ImpassableFurniture.AddPassability(def: this.rightSelectedDef);
             }
-            if (Widgets.ButtonImage(bottomRect.BottomPart(0.4f).TopPart(0.15f).RightPart(0.525f).LeftPart(0.1f), TexUI.ArrowTexLeft) && this.rightSelectedDef != null)
+            if (Widgets.ButtonImage(butRect: bottomRect.BottomPart(pct: 0.4f).TopPart(pct: 0.15f).RightPart(pct: 0.525f).LeftPart(pct: 0.1f), tex: TexUI.ArrowTexLeft) && this.rightSelectedDef != null)
             {
-                this.Settings.enabledDefList.Remove(this.rightSelectedDef);
+                this.Settings.enabledDefList.Remove(item: this.rightSelectedDef);
                 this.leftSelectedDef = this.rightSelectedDef;
                 this.rightSelectedDef = null;
-                ImpassableFurniture.RemovePassability(this.leftSelectedDef);
+                ImpassableFurniture.RemovePassability(def: this.leftSelectedDef);
             }
             #endregion
 
@@ -125,17 +125,23 @@ namespace ImpassableFurniture
     }
 
     [StaticConstructorOnStartup]
-    static class ImpassableFurniture
+    internal static class ImpassableFurniture
     {
         static ImpassableFurniture()
         {
-
-            DefDatabase<ThingDef>.AllDefsListForReading.ForEach(td =>
+            if (ImpassableFurnitureMod.instance.Settings.enabledDefList.NullOrEmpty())
             {
-                if (td.building != null && td.passability == Traversability.Impassable)
-                    RemovePassability(td);
-            });
-            ImpassableFurnitureMod.instance.Settings.enabledDefList.ForEach(td => AddPassability(td));
+                ImpassableFurnitureMod.instance.Settings.enabledDefList = DefDatabase<ThingDef>.AllDefsListForReading.Where(predicate: td => td.building != null && td.passability == Traversability.Impassable).ToList();
+            }
+            else
+            {
+                DefDatabase<ThingDef>.AllDefsListForReading.ForEach(action: td =>
+                {
+                    if (td.building != null && td.passability == Traversability.Impassable)
+                        RemovePassability(def: td);
+                });
+                ImpassableFurnitureMod.instance.Settings.enabledDefList.ForEach(action: AddPassability);
+            }
         }
 
         public static void AddPassability(ThingDef def)
@@ -146,22 +152,18 @@ namespace ImpassableFurniture
 
         public static void RemovePassability(ThingDef def)
         {
-            if (def.passability == Traversability.Impassable)
-            {
-                def.passability = Traversability.PassThroughOnly;
-                Regenerate();
-            }
+            if (def.passability != Traversability.Impassable) return;
+            def.passability = Traversability.PassThroughOnly;
+            Regenerate();
         }
 
         private static void Regenerate()
         {
-            if (Current.ProgramState == ProgramState.Playing)
+            if (Current.ProgramState != ProgramState.Playing) return;
+            foreach (Map map in Find.Maps)
             {
-                foreach (Map map in Find.Maps)
-                {
-                    map.pathGrid.RecalculateAllPerceivedPathCosts();
-                    map.regionAndRoomUpdater.RebuildAllRegionsAndRooms();
-                }
+                map.pathGrid.RecalculateAllPerceivedPathCosts();
+                map.regionAndRoomUpdater.RebuildAllRegionsAndRooms();
             }
         }
     }
